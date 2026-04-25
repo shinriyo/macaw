@@ -27,6 +27,15 @@ export function getFolderName(folder = getPrimaryWorkspaceFolder()): string {
   return folder ? path.basename(folder.uri.fsPath) : 'Workspace';
 }
 
+export function pathToTildePattern(folderPath: string): string {
+  const normalized = normalizePath(folderPath);
+  const home = normalizePath(os.homedir());
+
+  return normalized === home || normalized.startsWith(`${home}/`)
+    ? `~${normalized.slice(home.length)}`
+    : normalized;
+}
+
 function patternToRegExp(pattern: string): RegExp {
   const expanded = normalizePath(expandHome(pattern));
   const escaped = expanded

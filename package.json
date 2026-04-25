@@ -93,12 +93,12 @@
               }
             }
           },
-          "description": "Path rules checked in order. The first matching rule wins."
+          "description": "Root path to label/color mappings. Use the Macaw: Add Path Rule command to add the current workspace root without editing JSON. Rules are checked in order; the first matching rule wins."
         },
         "macaw.projectLabel": {
           "type": "string",
           "default": "",
-          "description": "Project label used in the window title. Folder name is used when empty."
+          "description": "Optional manual project name used in the window title. Path labels come from Macaw: Path Rules."
         },
         "macaw.showLanguageInTitle": {
           "type": "boolean",

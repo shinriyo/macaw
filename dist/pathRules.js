@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPrimaryWorkspaceFolder = getPrimaryWorkspaceFolder;
 exports.matchPathRule = matchPathRule;
 exports.getFolderName = getFolderName;
+exports.pathToTildePattern = pathToTildePattern;
 const os = __importStar(require("os"));
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
@@ -52,6 +53,13 @@ function matchPathRule(rules, folder = getPrimaryWorkspaceFolder()) {
 }
 function getFolderName(folder = getPrimaryWorkspaceFolder()) {
     return folder ? path.basename(folder.uri.fsPath) : 'Workspace';
+}
+function pathToTildePattern(folderPath) {
+    const normalized = normalizePath(folderPath);
+    const home = normalizePath(os.homedir());
+    return normalized === home || normalized.startsWith(`${home}/`)
+        ? `~${normalized.slice(home.length)}`
+        : normalized;
 }
 function patternToRegExp(pattern) {
     const expanded = normalizePath(expandHome(pattern));

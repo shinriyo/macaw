@@ -38,6 +38,7 @@ exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const apply_1 = require("./apply");
 const config_1 = require("./config");
+const pathRules_1 = require("./pathRules");
 function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('macaw.apply', async () => {
         await (0, apply_1.applyMacaw)();
@@ -58,10 +59,13 @@ function deactivate() {
     // VS Code disposes registered subscriptions for us.
 }
 async function addPathRule() {
+    const folder = (0, pathRules_1.getPrimaryWorkspaceFolder)();
+    const currentPattern = folder ? (0, pathRules_1.pathToTildePattern)(folder.uri.fsPath) : '';
     const pattern = await vscode.window.showInputBox({
         title: 'Macaw: Add Path Rule',
-        prompt: 'Workspace path pattern',
-        placeHolder: '~/develop/*',
+        prompt: 'Root path pattern to map to a title label',
+        value: currentPattern,
+        placeHolder: '~/develop/app',
         ignoreFocusOut: true
     });
     if (!pattern) {
@@ -69,7 +73,8 @@ async function addPathRule() {
     }
     const label = await vscode.window.showInputBox({
         title: 'Macaw: Add Path Rule',
-        prompt: 'Short title label',
+        prompt: 'Label shown in the window title for this root',
+        value: folder ? (0, pathRules_1.getFolderName)(folder).toUpperCase() : '',
         placeHolder: 'DEV',
         ignoreFocusOut: true
     });
@@ -93,8 +98,9 @@ async function addPathRule() {
         label: label.trim(),
         color: color.trim()
     };
-    await config.update('pathRules', [...rules, nextRule], vscode.ConfigurationTarget.Workspace);
+    await config.update('pathRules', upsertPathRule(rules, nextRule), vscode.ConfigurationTarget.Workspace);
     await (0, apply_1.applyMacaw)();
+    void vscode.window.showInformationMessage(`Macaw mapped ${nextRule.pattern} to [${nextRule.label}].`);
 }
 async function setProjectLabel() {
     const currentLabel = (0, config_1.getConfig)().projectLabel;
@@ -111,5 +117,14 @@ async function setProjectLabel() {
         .getConfiguration('macaw')
         .update('projectLabel', label.trim(), vscode.ConfigurationTarget.Workspace);
     await (0, apply_1.applyMacaw)();
+}
+function upsertPathRule(rules, nextRule) {
+    const index = rules.findIndex((rule) => rule.pattern === nextRule.pattern);
+    if (index === -1) {
+        return [...rules, nextRule];
+    }
+    const nextRules = [...rules];
+    nextRules[index] = nextRule;
+    return nextRules;
 }
 //# sourceMappingURL=extension.js.map

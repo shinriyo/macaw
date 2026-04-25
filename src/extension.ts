@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { applyMacaw, clearMacaw } from './apply';
 import { getConfig, type PathRule } from './config';
+import { getFolderName, getPrimaryWorkspaceFolder, pathToTildePattern } from './pathRules';
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
@@ -33,10 +34,13 @@ export function deactivate(): void {
 }
 
 async function addPathRule(): Promise<void> {
+  const folder = getPrimaryWorkspaceFolder();
+  const currentPattern = folder ? pathToTildePattern(folder.uri.fsPath) : '';
   const pattern = await vscode.window.showInputBox({
     title: 'Macaw: Add Path Rule',
-    prompt: 'Workspace path pattern',
-    placeHolder: '~/develop/*',
+    prompt: 'Root path pattern to map to a title label',
+    value: currentPattern,
+    placeHolder: '~/develop/app',
     ignoreFocusOut: true
   });
 
@@ -46,7 +50,8 @@ async function addPathRule(): Promise<void> {
 
   const label = await vscode.window.showInputBox({
     title: 'Macaw: Add Path Rule',
-    prompt: 'Short title label',
+    prompt: 'Label shown in the window title for this root',
+    value: folder ? getFolderName(folder).toUpperCase() : '',
     placeHolder: 'DEV',
     ignoreFocusOut: true
   });
@@ -75,8 +80,9 @@ async function addPathRule(): Promise<void> {
     color: color.trim()
   };
 
-  await config.update('pathRules', [...rules, nextRule], vscode.ConfigurationTarget.Workspace);
+  await config.update('pathRules', upsertPathRule(rules, nextRule), vscode.ConfigurationTarget.Workspace);
   await applyMacaw();
+  void vscode.window.showInformationMessage(`Macaw mapped ${nextRule.pattern} to [${nextRule.label}].`);
 }
 
 async function setProjectLabel(): Promise<void> {
@@ -96,4 +102,16 @@ async function setProjectLabel(): Promise<void> {
     .getConfiguration('macaw')
     .update('projectLabel', label.trim(), vscode.ConfigurationTarget.Workspace);
   await applyMacaw();
+}
+
+function upsertPathRule(rules: PathRule[], nextRule: PathRule): PathRule[] {
+  const index = rules.findIndex((rule) => rule.pattern === nextRule.pattern);
+
+  if (index === -1) {
+    return [...rules, nextRule];
+  }
+
+  const nextRules = [...rules];
+  nextRules[index] = nextRule;
+  return nextRules;
 }
