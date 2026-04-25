@@ -1,0 +1,126 @@
+{
+  "name": "macaw",
+  "displayName": "Macaw",
+  "description": "Automatically changes workspace color and title based on folder path or active language.",
+  "version": "0.0.1",
+  "publisher": "shinriyo",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:macaw.apply",
+    "onCommand:macaw.clear",
+    "onCommand:macaw.addPathRule",
+    "onCommand:macaw.setProjectLabel"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "macaw.apply",
+        "title": "Macaw: Apply"
+      },
+      {
+        "command": "macaw.clear",
+        "title": "Macaw: Clear"
+      },
+      {
+        "command": "macaw.addPathRule",
+        "title": "Macaw: Add Path Rule"
+      },
+      {
+        "command": "macaw.setProjectLabel",
+        "title": "Macaw: Set Project Label"
+      }
+    ],
+    "configuration": {
+      "title": "Macaw",
+      "properties": {
+        "macaw.colorMode": {
+          "type": "string",
+          "enum": [
+            "path",
+            "language",
+            "none"
+          ],
+          "default": "path",
+          "description": "Controls how Macaw chooses the workspace color."
+        },
+        "macaw.pathRules": {
+          "type": "array",
+          "default": [
+            {
+              "pattern": "~/develop/*",
+              "label": "DEV",
+              "color": "#7E57C2"
+            },
+            {
+              "pattern": "~/work/*",
+              "label": "WORK",
+              "color": "#1976D2"
+            },
+            {
+              "pattern": "~/danger/*",
+              "label": "DANGER",
+              "color": "#D32F2F"
+            }
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "pattern",
+              "label",
+              "color"
+            ],
+            "properties": {
+              "pattern": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              }
+            }
+          },
+          "description": "Path rules checked in order. The first matching rule wins."
+        },
+        "macaw.projectLabel": {
+          "type": "string",
+          "default": "",
+          "description": "Project label used in the window title. Folder name is used when empty."
+        },
+        "macaw.showLanguageInTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the active language in the window title."
+        },
+        "macaw.showPathLabelInTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the matched path label in the window title."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.5"
+  }
+}
