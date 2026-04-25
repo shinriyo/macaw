@@ -38,7 +38,6 @@ exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const apply_1 = require("./apply");
 const config_1 = require("./config");
-const pathRules_1 = require("./pathRules");
 const rulesView_1 = require("./rulesView");
 function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('macaw.apply', async () => {
@@ -47,8 +46,6 @@ function activate(context) {
         await (0, apply_1.clearMacaw)();
     }), vscode.commands.registerCommand('macaw.openRules', async () => {
         await (0, rulesView_1.openRulesView)(context);
-    }), vscode.commands.registerCommand('macaw.addPathRule', async () => {
-        await addPathRule();
     }), vscode.commands.registerCommand('macaw.setProjectLabel', async () => {
         await setProjectLabel();
     }), vscode.workspace.onDidChangeWorkspaceFolders(() => void (0, apply_1.applyMacaw)()), vscode.window.onDidChangeActiveTextEditor(() => void (0, apply_1.applyMacaw)()), vscode.workspace.onDidChangeConfiguration((event) => {
@@ -60,50 +57,6 @@ function activate(context) {
 }
 function deactivate() {
     // VS Code disposes registered subscriptions for us.
-}
-async function addPathRule() {
-    const folder = (0, pathRules_1.getPrimaryWorkspaceFolder)();
-    const currentPattern = folder ? (0, pathRules_1.pathToTildePattern)(folder.uri.fsPath) : '';
-    const pattern = await vscode.window.showInputBox({
-        title: 'Macaw: Add Path Rule',
-        prompt: 'Root path pattern to map to a title label',
-        value: currentPattern,
-        placeHolder: '~/develop/app',
-        ignoreFocusOut: true
-    });
-    if (!pattern) {
-        return;
-    }
-    const label = await vscode.window.showInputBox({
-        title: 'Macaw: Add Path Rule',
-        prompt: 'Label shown in the window title for this root',
-        value: folder ? (0, pathRules_1.getFolderName)(folder).toUpperCase() : '',
-        placeHolder: 'DEV',
-        ignoreFocusOut: true
-    });
-    if (!label) {
-        return;
-    }
-    const color = await vscode.window.showInputBox({
-        title: 'Macaw: Add Path Rule',
-        prompt: 'Hex color',
-        placeHolder: '#7E57C2',
-        validateInput: (value) => /^#[0-9A-Fa-f]{6}$/.test(value) ? undefined : 'Use #RRGGBB.',
-        ignoreFocusOut: true
-    });
-    if (!color) {
-        return;
-    }
-    const config = vscode.workspace.getConfiguration('macaw');
-    const rules = (0, config_1.getConfig)().pathRules;
-    const nextRule = {
-        pattern: pattern.trim(),
-        label: label.trim(),
-        color: color.trim()
-    };
-    await config.update('pathRules', upsertPathRule(rules, nextRule), vscode.ConfigurationTarget.Workspace);
-    await (0, apply_1.applyMacaw)();
-    void vscode.window.showInformationMessage(`Macaw mapped ${nextRule.pattern} to [${nextRule.label}].`);
 }
 async function setProjectLabel() {
     const currentLabel = (0, config_1.getConfig)().projectLabel;
@@ -120,14 +73,5 @@ async function setProjectLabel() {
         .getConfiguration('macaw')
         .update('projectLabel', label.trim(), vscode.ConfigurationTarget.Workspace);
     await (0, apply_1.applyMacaw)();
-}
-function upsertPathRule(rules, nextRule) {
-    const index = rules.findIndex((rule) => rule.pattern === nextRule.pattern);
-    if (index === -1) {
-        return [...rules, nextRule];
-    }
-    const nextRules = [...rules];
-    nextRules[index] = nextRule;
-    return nextRules;
 }
 //# sourceMappingURL=extension.js.map

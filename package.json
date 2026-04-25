@@ -19,7 +19,6 @@
     "onCommand:macaw.apply",
     "onCommand:macaw.clear",
     "onCommand:macaw.openRules",
-    "onCommand:macaw.addPathRule",
     "onCommand:macaw.setProjectLabel"
   ],
   "main": "./dist/extension.js",
@@ -36,10 +35,6 @@
       {
         "command": "macaw.openRules",
         "title": "Macaw: Open Rules"
-      },
-      {
-        "command": "macaw.addPathRule",
-        "title": "Macaw: Add Path Rule"
       },
       {
         "command": "macaw.setProjectLabel",
@@ -98,7 +93,7 @@
               }
             }
           },
-          "description": "Root path to label/color mappings. Use the Macaw: Add Path Rule command to add the current workspace root without editing JSON. Rules are checked in order; the first matching rule wins."
+          "description": "Root path to label/color mappings. Use the Macaw: Open Rules command to edit them without touching JSON. Rules are checked in order; the first matching rule wins."
         },
         "macaw.projectLabel": {
           "type": "string",
