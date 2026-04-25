@@ -18,6 +18,7 @@
     "onStartupFinished",
     "onCommand:macaw.apply",
     "onCommand:macaw.clear",
+    "onCommand:macaw.openRules",
     "onCommand:macaw.addPathRule",
     "onCommand:macaw.setProjectLabel"
   ],
@@ -31,6 +32,10 @@
       {
         "command": "macaw.clear",
         "title": "Macaw: Clear"
+      },
+      {
+        "command": "macaw.openRules",
+        "title": "Macaw: Open Rules"
       },
       {
         "command": "macaw.addPathRule",

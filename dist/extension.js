@@ -39,11 +39,14 @@ const vscode = __importStar(require("vscode"));
 const apply_1 = require("./apply");
 const config_1 = require("./config");
 const pathRules_1 = require("./pathRules");
+const rulesView_1 = require("./rulesView");
 function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('macaw.apply', async () => {
         await (0, apply_1.applyMacaw)();
     }), vscode.commands.registerCommand('macaw.clear', async () => {
         await (0, apply_1.clearMacaw)();
+    }), vscode.commands.registerCommand('macaw.openRules', async () => {
+        await (0, rulesView_1.openRulesView)(context);
     }), vscode.commands.registerCommand('macaw.addPathRule', async () => {
         await addPathRule();
     }), vscode.commands.registerCommand('macaw.setProjectLabel', async () => {

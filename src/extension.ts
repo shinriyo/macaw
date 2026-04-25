@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { applyMacaw, clearMacaw } from './apply';
 import { getConfig, type PathRule } from './config';
 import { getFolderName, getPrimaryWorkspaceFolder, pathToTildePattern } from './pathRules';
+import { openRulesView } from './rulesView';
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
@@ -10,6 +11,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('macaw.clear', async () => {
       await clearMacaw();
+    }),
+    vscode.commands.registerCommand('macaw.openRules', async () => {
+      await openRulesView(context);
     }),
     vscode.commands.registerCommand('macaw.addPathRule', async () => {
       await addPathRule();

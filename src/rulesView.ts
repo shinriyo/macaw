@@ -1,0 +1,430 @@
+import * as vscode from 'vscode';
+import { applyMacaw } from './apply';
+import { type ColorMode, getConfig, type PathRule } from './config';
+import { getFolderName, getPrimaryWorkspaceFolder, pathToTildePattern } from './pathRules';
+
+interface RulesViewState {
+  colorMode: ColorMode;
+  projectLabel: string;
+  showLanguageInTitle: boolean;
+  showPathLabelInTitle: boolean;
+  pathRules: PathRule[];
+  currentRoot: string;
+  currentFolderName: string;
+}
+
+type WebviewMessage =
+  | { type: 'save'; state: RulesViewState }
+  | { type: 'apply' };
+
+let panel: vscode.WebviewPanel | undefined;
+
+export async function openRulesView(context: vscode.ExtensionContext): Promise<void> {
+  if (panel) {
+    panel.reveal(vscode.ViewColumn.One);
+    panel.webview.postMessage({ type: 'state', state: getRulesViewState() });
+    return;
+  }
+
+  panel = vscode.window.createWebviewPanel(
+    'macawRules',
+    'Macaw Rules',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true,
+      localResourceRoots: [context.extensionUri]
+    }
+  );
+
+  panel.onDidDispose(() => {
+    panel = undefined;
+  }, null, context.subscriptions);
+
+  panel.webview.html = getHtml(panel.webview, getRulesViewState());
+  panel.webview.onDidReceiveMessage((message: WebviewMessage) => {
+    if (message.type === 'save') {
+      void saveState(message.state);
+      return;
+    }
+
+    if (message.type === 'apply') {
+      void applyMacaw();
+    }
+  }, null, context.subscriptions);
+}
+
+function getRulesViewState(): RulesViewState {
+  const config = getConfig();
+  const folder = getPrimaryWorkspaceFolder();
+
+  return {
+    ...config,
+    currentRoot: folder ? pathToTildePattern(folder.uri.fsPath) : '',
+    currentFolderName: folder ? getFolderName(folder) : ''
+  };
+}
+
+async function saveState(state: RulesViewState): Promise<void> {
+  const config = vscode.workspace.getConfiguration('macaw');
+  const rules = state.pathRules
+    .map((rule) => ({
+      pattern: rule.pattern.trim(),
+      label: rule.label.trim(),
+      color: rule.color.trim()
+    }))
+    .filter((rule) => rule.pattern && rule.label && /^#[0-9A-Fa-f]{6}$/.test(rule.color));
+
+  await config.update('colorMode', state.colorMode, vscode.ConfigurationTarget.Workspace);
+  await config.update('projectLabel', state.projectLabel.trim(), vscode.ConfigurationTarget.Workspace);
+  await config.update('showLanguageInTitle', state.showLanguageInTitle, vscode.ConfigurationTarget.Workspace);
+  await config.update('showPathLabelInTitle', state.showPathLabelInTitle, vscode.ConfigurationTarget.Workspace);
+  await config.update('pathRules', rules, vscode.ConfigurationTarget.Workspace);
+  await applyMacaw();
+  void vscode.window.showInformationMessage('Macaw rules saved.');
+}
+
+function getHtml(webview: vscode.Webview, state: RulesViewState): string {
+  const nonce = getNonce();
+  const encodedState = JSON.stringify(state).replace(/</g, '\\u003c');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macaw Rules</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --gap: 14px;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      color: var(--vscode-foreground);
+      background: var(--vscode-editor-background);
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: 24px;
+      font-weight: 650;
+    }
+
+    h2 {
+      margin: 28px 0 12px;
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--gap);
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    input,
+    select {
+      min-height: 30px;
+      box-sizing: border-box;
+      border: 1px solid var(--vscode-input-border, transparent);
+      color: var(--vscode-input-foreground);
+      background: var(--vscode-input-background);
+      padding: 5px 8px;
+      border-radius: 3px;
+      font: inherit;
+    }
+
+    input[type="color"] {
+      width: 48px;
+      padding: 2px;
+    }
+
+    .toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-top: 16px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rules {
+      display: grid;
+      gap: 8px;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.8fr) minmax(120px, 0.8fr) 56px 98px 34px;
+      gap: 8px;
+      align-items: end;
+      padding: 10px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      background: var(--vscode-sideBar-background);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      min-height: 30px;
+      border: 0;
+      border-radius: 3px;
+      padding: 5px 12px;
+      color: var(--vscode-button-foreground);
+      background: var(--vscode-button-background);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--vscode-button-hoverBackground);
+    }
+
+    button.secondary {
+      color: var(--vscode-button-secondaryForeground);
+      background: var(--vscode-button-secondaryBackground);
+    }
+
+    button.secondary:hover {
+      background: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    button.icon {
+      width: 34px;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 16px;
+      }
+
+      .rule {
+        grid-template-columns: 1fr;
+      }
+
+      input[type="color"] {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Macaw Rules</h1>
+
+    <section class="settings">
+      <label>
+        Color mode
+        <select id="colorMode">
+          <option value="path">Path</option>
+          <option value="language">Language</option>
+          <option value="none">None</option>
+        </select>
+      </label>
+      <label>
+        Project label
+        <input id="projectLabel" type="text" placeholder="Folder name is used when empty">
+      </label>
+    </section>
+
+    <div class="toggles">
+      <label class="toggle"><input id="showPathLabelInTitle" type="checkbox"> Show path label in title</label>
+      <label class="toggle"><input id="showLanguageInTitle" type="checkbox"> Show language in title</label>
+    </div>
+
+    <h2>Root Path Mappings</h2>
+    <div id="rules" class="rules"></div>
+    <div class="actions">
+      <button id="addCurrent">Add Current Root</button>
+      <button id="addBlank" class="secondary">Add Blank Rule</button>
+      <button id="save">Save</button>
+      <button id="apply" class="secondary">Apply</button>
+    </div>
+    <p class="hint">First matching path rule wins. Use * for one path segment.</p>
+  </main>
+
+  <script nonce="${nonce}">
+    const vscode = acquireVsCodeApi();
+    const state = ${encodedState};
+    const colorMode = document.getElementById('colorMode');
+    const projectLabel = document.getElementById('projectLabel');
+    const showPathLabelInTitle = document.getElementById('showPathLabelInTitle');
+    const showLanguageInTitle = document.getElementById('showLanguageInTitle');
+    const rules = document.getElementById('rules');
+
+    function render(nextState) {
+      Object.assign(state, nextState);
+      colorMode.value = state.colorMode;
+      projectLabel.value = state.projectLabel;
+      showPathLabelInTitle.checked = state.showPathLabelInTitle;
+      showLanguageInTitle.checked = state.showLanguageInTitle;
+      rules.replaceChildren(...state.pathRules.map((rule, index) => renderRule(rule, index)));
+    }
+
+    function renderRule(rule, index) {
+      const row = document.createElement('div');
+      row.className = 'rule';
+
+      row.append(
+        field('Pattern', textInput(rule.pattern, (value) => state.pathRules[index].pattern = value)),
+        field('Label', textInput(rule.label, (value) => state.pathRules[index].label = value)),
+        field('Color', colorInput(rule.color, (value) => state.pathRules[index].color = value)),
+        preview(rule),
+        removeButton(index)
+      );
+
+      return row;
+    }
+
+    function field(labelText, input) {
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      label.append(input);
+      return label;
+    }
+
+    function textInput(value, onInput) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = value;
+      input.addEventListener('input', () => onInput(input.value));
+      return input;
+    }
+
+    function colorInput(value, onInput) {
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.value = /^#[0-9A-Fa-f]{6}$/.test(value) ? value : '#1976D2';
+      input.addEventListener('input', () => onInput(input.value));
+      return input;
+    }
+
+    function preview(rule) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'secondary';
+      button.textContent = rule.color;
+      button.style.background = /^#[0-9A-Fa-f]{6}$/.test(rule.color) ? rule.color : '';
+      button.style.color = contrast(rule.color);
+      return button;
+    }
+
+    function removeButton(index) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'icon secondary';
+      button.title = 'Remove rule';
+      button.textContent = '×';
+      button.addEventListener('click', () => {
+        state.pathRules.splice(index, 1);
+        render(state);
+      });
+      return button;
+    }
+
+    function collectState() {
+      return {
+        colorMode: colorMode.value,
+        projectLabel: projectLabel.value,
+        showLanguageInTitle: showLanguageInTitle.checked,
+        showPathLabelInTitle: showPathLabelInTitle.checked,
+        pathRules: state.pathRules,
+        currentRoot: state.currentRoot,
+        currentFolderName: state.currentFolderName
+      };
+    }
+
+    function addRule(rule) {
+      state.pathRules.push(rule);
+      render(state);
+    }
+
+    function contrast(hex) {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        return '';
+      }
+
+      const red = parseInt(hex.slice(1, 3), 16);
+      const green = parseInt(hex.slice(3, 5), 16);
+      const blue = parseInt(hex.slice(5, 7), 16);
+      const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+      return luminance > 0.6 ? '#000000' : '#FFFFFF';
+    }
+
+    document.getElementById('addCurrent').addEventListener('click', () => {
+      addRule({
+        pattern: state.currentRoot || '~/develop/*',
+        label: (state.currentFolderName || 'DEV').toUpperCase(),
+        color: '#1976D2'
+      });
+    });
+
+    document.getElementById('addBlank').addEventListener('click', () => {
+      addRule({ pattern: '~/develop/*', label: 'DEV', color: '#7E57C2' });
+    });
+
+    document.getElementById('save').addEventListener('click', () => {
+      vscode.postMessage({ type: 'save', state: collectState() });
+    });
+
+    document.getElementById('apply').addEventListener('click', () => {
+      vscode.postMessage({ type: 'apply' });
+    });
+
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'state') {
+        render(event.data.state);
+      }
+    });
+
+    render(state);
+  </script>
+</body>
+</html>`;
+}
+
+function getNonce(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let nonce = '';
+
+  for (let i = 0; i < 32; i += 1) {
+    nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return nonce;
+}
