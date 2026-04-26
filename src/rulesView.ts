@@ -16,7 +16,8 @@ interface RulesViewState {
 
 type WebviewMessage =
   | { type: 'save'; state: RulesViewState }
-  | { type: 'apply' };
+  | { type: 'apply' }
+  | { type: 'copyColor'; color: string };
 
 let panel: vscode.WebviewPanel | undefined;
 
@@ -50,6 +51,11 @@ export async function openRulesView(context: vscode.ExtensionContext): Promise<v
 
     if (message.type === 'apply') {
       void applyMacaw();
+      return;
+    }
+
+    if (message.type === 'copyColor') {
+      void copyColor(message.color);
     }
   }, null, context.subscriptions);
 }
@@ -82,6 +88,14 @@ async function saveState(state: RulesViewState): Promise<void> {
   await config.update('languageColors', cleanLanguageColors(state.languageColors), vscode.ConfigurationTarget.Workspace);
   await applyMacaw();
   void vscode.window.showInformationMessage('Macaw rules saved.');
+}
+
+async function copyColor(color: string): Promise<void> {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+    return;
+  }
+
+  await vscode.env.clipboard.writeText(color);
 }
 
 function cleanLanguageColors(languageColors: Record<string, string>): Record<string, string> {
@@ -261,6 +275,16 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     button.secondary:hover {
       background: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    button.color-chip {
+      border: 1px solid var(--vscode-panel-border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    button.color-chip:hover {
+      border-color: var(--vscode-focusBorder);
+      filter: brightness(1.08);
     }
 
     button.compact {
@@ -470,13 +494,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     }
 
     function preview(rule) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'secondary';
-      button.textContent = rule.color;
-      button.style.background = /^#[0-9A-Fa-f]{6}$/.test(rule.color) ? rule.color : '';
-      button.style.color = contrast(rule.color);
-      return button;
+      return colorChip(rule.color);
     }
 
     function removeButton(index) {
@@ -537,6 +555,32 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       languagePreview.textContent = label + ' ' + languageColor.value;
       languagePreview.style.background = languageColor.value;
       languagePreview.style.color = contrast(languageColor.value);
+      languagePreview.title = 'Copy ' + languageColor.value;
+    }
+
+    function colorChip(color) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'color-chip';
+      button.textContent = color;
+      button.title = 'Copy ' + color;
+      button.style.background = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : '';
+      button.style.color = contrast(color);
+      button.addEventListener('click', () => copyColor(button, color));
+      return button;
+    }
+
+    function copyColor(button, color) {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+        return;
+      }
+
+      vscode.postMessage({ type: 'copyColor', color });
+      const original = button.textContent;
+      button.textContent = 'Copied';
+      setTimeout(() => {
+        button.textContent = original;
+      }, 900);
     }
 
     function contrast(hex) {
@@ -566,6 +610,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     });
 
     languageColor.addEventListener('input', updateLanguageColor);
+    languagePreview.addEventListener('click', () => copyColor(languagePreview, languageColor.value));
 
     document.getElementById('save').addEventListener('click', () => {
       vscode.postMessage({ type: 'save', state: collectState() });
