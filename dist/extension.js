@@ -37,7 +37,6 @@ exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
 const apply_1 = require("./apply");
-const config_1 = require("./config");
 const rulesView_1 = require("./rulesView");
 function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('macaw.apply', async () => {
@@ -46,8 +45,6 @@ function activate(context) {
         await (0, apply_1.clearMacaw)();
     }), vscode.commands.registerCommand('macaw.openRules', async () => {
         await (0, rulesView_1.openRulesView)(context);
-    }), vscode.commands.registerCommand('macaw.setProjectLabel', async () => {
-        await setProjectLabel();
     }), vscode.workspace.onDidChangeWorkspaceFolders(() => void (0, apply_1.applyMacaw)()), vscode.window.onDidChangeActiveTextEditor(() => void (0, apply_1.applyMacaw)()), vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('macaw')) {
             void (0, apply_1.applyMacaw)();
@@ -57,21 +54,5 @@ function activate(context) {
 }
 function deactivate() {
     // VS Code disposes registered subscriptions for us.
-}
-async function setProjectLabel() {
-    const currentLabel = (0, config_1.getConfig)().projectLabel;
-    const label = await vscode.window.showInputBox({
-        title: 'Macaw: Set Project Label',
-        prompt: 'Project label for the window title',
-        value: currentLabel,
-        ignoreFocusOut: true
-    });
-    if (label === undefined) {
-        return;
-    }
-    await vscode.workspace
-        .getConfiguration('macaw')
-        .update('projectLabel', label.trim(), vscode.ConfigurationTarget.Workspace);
-    await (0, apply_1.applyMacaw)();
 }
 //# sourceMappingURL=extension.js.map

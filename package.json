@@ -18,8 +18,7 @@
     "onStartupFinished",
     "onCommand:macaw.apply",
     "onCommand:macaw.clear",
-    "onCommand:macaw.openRules",
-    "onCommand:macaw.setProjectLabel"
+    "onCommand:macaw.openRules"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -35,10 +34,6 @@
       {
         "command": "macaw.openRules",
         "title": "Macaw: Open Rules"
-      },
-      {
-        "command": "macaw.setProjectLabel",
-        "title": "Macaw: Set Project Label"
       }
     ],
     "configuration": {
@@ -110,11 +105,6 @@
             "pattern": "^#[0-9A-Fa-f]{6}$"
           },
           "description": "Language ID to color mappings used when Color Mode is Language."
-        },
-        "macaw.projectLabel": {
-          "type": "string",
-          "default": "",
-          "description": "Optional manual project name used in the window title. Path labels come from Macaw: Path Rules."
         },
         "macaw.showLanguageInTitle": {
           "type": "boolean",

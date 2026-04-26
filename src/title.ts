@@ -7,7 +7,7 @@ export interface TitleParts {
 }
 
 export function buildTitle(config: MacawConfig, parts: TitleParts): string {
-  const label = (config.projectLabel || parts.folderName).trim();
+  const label = parts.folderName.trim();
   const prefix = config.showPathLabelInTitle && parts.pathLabel ? `[${parts.pathLabel}] ` : '';
   const language = config.showLanguageInTitle && parts.languageName ? `${parts.languageName}` : '';
   const project = label ? `「${label}」` : '';

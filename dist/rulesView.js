@@ -83,7 +83,6 @@ async function saveState(state) {
     }))
         .filter((rule) => rule.pattern && rule.label && /^#[0-9A-Fa-f]{6}$/.test(rule.color));
     await config.update('colorMode', state.colorMode, vscode.ConfigurationTarget.Workspace);
-    await config.update('projectLabel', state.projectLabel.trim(), vscode.ConfigurationTarget.Workspace);
     await config.update('showLanguageInTitle', state.showLanguageInTitle, vscode.ConfigurationTarget.Workspace);
     await config.update('showPathLabelInTitle', state.showPathLabelInTitle, vscode.ConfigurationTarget.Workspace);
     await config.update('pathRules', rules, vscode.ConfigurationTarget.Workspace);
@@ -334,10 +333,6 @@ function getHtml(webview, state) {
           <option value="none">None</option>
         </select>
       </label>
-      <label>
-        Project label
-        <input id="projectLabel" type="text" placeholder="Folder name is used when empty">
-      </label>
     </section>
 
     <div class="toggles">
@@ -390,7 +385,6 @@ function getHtml(webview, state) {
     const state = ${encodedState};
     const languages = ${encodedLanguages};
     const colorMode = document.getElementById('colorMode');
-    const projectLabel = document.getElementById('projectLabel');
     const showPathLabelInTitle = document.getElementById('showPathLabelInTitle');
     const showLanguageInTitle = document.getElementById('showLanguageInTitle');
     const rules = document.getElementById('rules');
@@ -404,7 +398,6 @@ function getHtml(webview, state) {
     function render(nextState) {
       Object.assign(state, nextState);
       colorMode.value = state.colorMode;
-      projectLabel.value = state.projectLabel;
       showPathLabelInTitle.checked = state.showPathLabelInTitle;
       showLanguageInTitle.checked = state.showLanguageInTitle;
       renderMode();
@@ -417,7 +410,6 @@ function getHtml(webview, state) {
       languagePanel.hidden = state.colorMode !== 'language';
       nonePanel.hidden = state.colorMode !== 'none';
       const disabled = state.colorMode === 'none';
-      projectLabel.disabled = disabled;
       showPathLabelInTitle.disabled = disabled;
       showLanguageInTitle.disabled = disabled;
     }
@@ -516,7 +508,6 @@ function getHtml(webview, state) {
     function collectState() {
       return {
         colorMode: colorMode.value,
-        projectLabel: projectLabel.value,
         showLanguageInTitle: showLanguageInTitle.checked,
         showPathLabelInTitle: showPathLabelInTitle.checked,
         pathRules: state.pathRules,

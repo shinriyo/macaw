@@ -12,7 +12,6 @@ export interface MacawConfig {
   colorMode: ColorMode;
   pathRules: PathRule[];
   languageColors: Record<string, string>;
-  projectLabel: string;
   showLanguageInTitle: boolean;
   showPathLabelInTitle: boolean;
 }
@@ -27,7 +26,6 @@ export function getConfig(): MacawConfig {
     colorMode: colorModes.has(colorMode) ? colorMode : 'path',
     pathRules: config.get<PathRule[]>('pathRules', []).filter(isPathRule),
     languageColors: getLanguageColors(config.get<Record<string, string>>('languageColors', {})),
-    projectLabel: config.get<string>('projectLabel', '').trim(),
     showLanguageInTitle: config.get<boolean>('showLanguageInTitle', true),
     showPathLabelInTitle: config.get<boolean>('showPathLabelInTitle', true)
   };

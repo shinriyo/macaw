@@ -43,7 +43,6 @@ function getConfig() {
         colorMode: colorModes.has(colorMode) ? colorMode : 'path',
         pathRules: config.get('pathRules', []).filter(isPathRule),
         languageColors: getLanguageColors(config.get('languageColors', {})),
-        projectLabel: config.get('projectLabel', '').trim(),
         showLanguageInTitle: config.get('showLanguageInTitle', true),
         showPathLabelInTitle: config.get('showPathLabelInTitle', true)
     };
