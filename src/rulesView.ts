@@ -272,6 +272,26 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       line-height: 1;
     }
 
+    button.danger {
+      width: 34px;
+      min-width: 34px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid var(--vscode-inputValidation-errorBorder, #BE1100);
+      color: #FFFFFF;
+      background: var(--vscode-inputValidation-errorBackground, #BE1100);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    button.danger:hover,
+    button.danger:focus {
+      background: #D32F2F;
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 2px;
+    }
+
     .hint {
       margin-top: 8px;
       color: var(--vscode-descriptionForeground);
@@ -466,7 +486,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     function removeButton(index) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'icon secondary';
+      button.className = 'danger';
       button.title = 'Remove rule';
       button.textContent = '×';
       button.addEventListener('click', () => {
