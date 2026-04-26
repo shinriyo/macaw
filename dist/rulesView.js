@@ -172,7 +172,7 @@ function getHtml(webview, state) {
       color: var(--vscode-descriptionForeground);
     }
 
-    input,
+    input:not([type="checkbox"]),
     select {
       min-height: 30px;
       box-sizing: border-box;
@@ -200,6 +200,14 @@ function getHtml(webview, state) {
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .toggle input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: var(--vscode-checkbox-selectBackground);
+      flex: 0 0 auto;
     }
 
     .rules {
