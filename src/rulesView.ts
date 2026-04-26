@@ -131,7 +131,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     body {
       margin: 0;
-      padding: 24px;
+      padding: 24px 24px 0;
       color: var(--vscode-foreground);
       background: var(--vscode-editor-background);
       font-family: var(--vscode-font-family);
@@ -240,10 +240,16 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     }
 
     .actions {
+      position: sticky;
+      bottom: 0;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 18px;
+      padding: 12px 0 16px;
+      border-top: 1px solid var(--vscode-panel-border);
+      background: var(--vscode-editor-background);
+      z-index: 5;
     }
 
     .inline-actions {
@@ -331,7 +337,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     @media (max-width: 760px) {
       body {
-        padding: 16px;
+        padding: 16px 16px 0;
       }
 
       .rule {
