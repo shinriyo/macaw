@@ -488,6 +488,12 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       input.type = 'text';
       input.value = value;
       input.addEventListener('input', () => onInput(input.value));
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          input.blur();
+        }
+      });
       return input;
     }
 
