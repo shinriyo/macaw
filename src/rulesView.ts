@@ -321,8 +321,11 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     button.icon {
       width: 34px;
+      min-width: 34px;
+      height: 30px;
       padding: 0;
       font-size: 18px;
+      font-weight: 700;
       line-height: 1;
     }
 
@@ -394,7 +397,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     <section id="pathPanel" class="mode-panel">
       <h2>Root Path Mappings</h2>
       <div class="inline-actions">
-        <button id="addBlank" class="secondary">Add Blank Rule</button>
+        <button id="addBlank" class="icon secondary" title="Add blank rule">+</button>
       </div>
       <div id="rules" class="rules"></div>
       <p class="hint">Pattern is only used in Path mode. First matching path rule wins.</p>
