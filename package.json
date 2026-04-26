@@ -46,23 +46,7 @@
         },
         "macaw.pathRules": {
           "type": "array",
-          "default": [
-            {
-              "pattern": "~/develop/*",
-              "label": "DEV",
-              "color": "#7E57C2"
-            },
-            {
-              "pattern": "~/work/*",
-              "label": "WORK",
-              "color": "#1976D2"
-            },
-            {
-              "pattern": "~/danger/*",
-              "label": "DANGER",
-              "color": "#D32F2F"
-            }
-          ],
+          "default": [],
           "items": {
             "type": "object",
             "required": [

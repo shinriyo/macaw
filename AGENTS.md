@@ -25,23 +25,9 @@ Behavior:
 
 macaw.pathRules:
 
-[
-  {
-    "pattern": "~/develop/*",
-    "label": "DEV",
-    "color": "#7E57C2"
-  },
-  {
-    "pattern": "~/work/*",
-    "label": "WORK",
-    "color": "#1976D2"
-  },
-  {
-    "pattern": "~/danger/*",
-    "label": "DANGER",
-    "color": "#D32F2F"
-  }
-]
+[]
+
+Rules are user-created from the GUI. New rules start with an empty pattern and label.
 
 Requirements:
 - support "~"
@@ -68,12 +54,11 @@ vscode.window.activeTextEditor.document.languageId
 
 ### 4. Title
 
-Format:
+Example format:
 
-[DEV] TypeScript「App bank プロジェクト」
+[WORK] TypeScript「App bank プロジェクト」
 
 Settings:
-macaw.projectLabel
 macaw.showLanguageInTitle
 macaw.showPathLabelInTitle
 
@@ -101,9 +86,7 @@ light → black text
 ### 6. Commands
 
 macaw.apply  
-macaw.clear  
-macaw.addPathRule  
-macaw.setProjectLabel  
+macaw.openRules  
 
 ---
 
@@ -145,18 +128,16 @@ apply.ts → main logic
 
 - colorMode
 - pathRules
-- projectLabel
 - path coloring
 - language coloring
 - title update
-- addPathRule command
-- clear command
+- rules GUI
 
 ---
 
 ## Done When
 
-- opening ~/develop/app sets color automatically
+- adding a path rule for a workspace root sets color automatically
 - language mode works
 - none mode does nothing
 - title shows label + language

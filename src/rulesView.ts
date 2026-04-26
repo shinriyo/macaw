@@ -633,7 +633,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     }
 
     document.getElementById('addBlank').addEventListener('click', () => {
-      addRule({ pattern: '~/develop/*', label: 'DEV', color: '#7E57C2' });
+      addRule({ pattern: '', label: '', color: '#7E57C2' });
     });
 
     colorMode.addEventListener('change', () => {
