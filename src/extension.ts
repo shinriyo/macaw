@@ -1,14 +1,11 @@
 import * as vscode from 'vscode';
-import { applyMacaw, clearMacaw } from './apply';
+import { applyMacaw } from './apply';
 import { openRulesView } from './rulesView';
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('macaw.apply', async () => {
       await applyMacaw();
-    }),
-    vscode.commands.registerCommand('macaw.clear', async () => {
-      await clearMacaw();
     }),
     vscode.commands.registerCommand('macaw.openRules', async () => {
       await openRulesView(context);

@@ -17,7 +17,6 @@
   "activationEvents": [
     "onStartupFinished",
     "onCommand:macaw.apply",
-    "onCommand:macaw.clear",
     "onCommand:macaw.openRules"
   ],
   "main": "./dist/extension.js",
@@ -26,10 +25,6 @@
       {
         "command": "macaw.apply",
         "title": "Macaw: Apply"
-      },
-      {
-        "command": "macaw.clear",
-        "title": "Macaw: Clear"
       },
       {
         "command": "macaw.openRules",

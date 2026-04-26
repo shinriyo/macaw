@@ -5,5 +5,4 @@ Macaw is a VS Code extension that changes workspace chrome colors and the window
 ## Commands
 
 - `Macaw: Apply`
-- `Macaw: Clear`
 - `Macaw: Open Rules`

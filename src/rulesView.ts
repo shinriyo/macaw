@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { applyMacaw } from './apply';
+import { applyMacaw, clearMacaw } from './apply';
 import { type ColorMode, getConfig, type PathRule } from './config';
 import { defaultLanguageColors, languageNames } from './language';
 import { getFolderName, getPrimaryWorkspaceFolder, pathToTildePattern } from './pathRules';
@@ -17,6 +17,7 @@ interface RulesViewState {
 type WebviewMessage =
   | { type: 'save'; state: RulesViewState }
   | { type: 'apply' }
+  | { type: 'clear' }
   | { type: 'copyColor'; color: string };
 
 let panel: vscode.WebviewPanel | undefined;
@@ -51,6 +52,11 @@ export async function openRulesView(context: vscode.ExtensionContext): Promise<v
 
     if (message.type === 'apply') {
       void applyMacaw();
+      return;
+    }
+
+    if (message.type === 'clear') {
+      void clearFromView();
       return;
     }
 
@@ -96,6 +102,11 @@ async function copyColor(color: string): Promise<void> {
   }
 
   await vscode.env.clipboard.writeText(color);
+}
+
+async function clearFromView(): Promise<void> {
+  await clearMacaw();
+  void vscode.window.showInformationMessage('Macaw colors and title cleared.');
 }
 
 function cleanLanguageColors(languageColors: Record<string, string>): Record<string, string> {
@@ -283,6 +294,16 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       background: var(--vscode-button-secondaryHoverBackground);
     }
 
+    button.clear {
+      color: var(--vscode-button-secondaryForeground);
+      background: var(--vscode-button-secondaryBackground);
+      margin-left: auto;
+    }
+
+    button.clear:hover {
+      background: var(--vscode-button-secondaryHoverBackground);
+    }
+
     button.color-chip {
       border: 1px solid var(--vscode-panel-border);
       font-variant-numeric: tabular-nums;
@@ -407,6 +428,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     <div class="actions">
       <button id="save">Save & Apply</button>
       <button id="apply" class="secondary">Apply Current Settings</button>
+      <button id="clear" class="clear">Clear</button>
     </div>
   </main>
 
@@ -630,6 +652,10 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     document.getElementById('apply').addEventListener('click', () => {
       vscode.postMessage({ type: 'apply' });
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      vscode.postMessage({ type: 'clear' });
     });
 
     window.addEventListener('message', (event) => {

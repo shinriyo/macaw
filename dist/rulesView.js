@@ -63,6 +63,10 @@ async function openRulesView(context) {
             void (0, apply_1.applyMacaw)();
             return;
         }
+        if (message.type === 'clear') {
+            void clearFromView();
+            return;
+        }
         if (message.type === 'copyColor') {
             void copyColor(message.color);
         }
@@ -99,6 +103,10 @@ async function copyColor(color) {
         return;
     }
     await vscode.env.clipboard.writeText(color);
+}
+async function clearFromView() {
+    await (0, apply_1.clearMacaw)();
+    void vscode.window.showInformationMessage('Macaw colors and title cleared.');
 }
 function cleanLanguageColors(languageColors) {
     return Object.fromEntries(Object.entries(languageColors)
@@ -279,6 +287,16 @@ function getHtml(webview, state) {
       background: var(--vscode-button-secondaryHoverBackground);
     }
 
+    button.clear {
+      color: var(--vscode-button-secondaryForeground);
+      background: var(--vscode-button-secondaryBackground);
+      margin-left: auto;
+    }
+
+    button.clear:hover {
+      background: var(--vscode-button-secondaryHoverBackground);
+    }
+
     button.color-chip {
       border: 1px solid var(--vscode-panel-border);
       font-variant-numeric: tabular-nums;
@@ -403,6 +421,7 @@ function getHtml(webview, state) {
     <div class="actions">
       <button id="save">Save & Apply</button>
       <button id="apply" class="secondary">Apply Current Settings</button>
+      <button id="clear" class="clear">Clear</button>
     </div>
   </main>
 
@@ -626,6 +645,10 @@ function getHtml(webview, state) {
 
     document.getElementById('apply').addEventListener('click', () => {
       vscode.postMessage({ type: 'apply' });
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      vscode.postMessage({ type: 'clear' });
     });
 
     window.addEventListener('message', (event) => {
