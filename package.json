@@ -95,6 +95,22 @@
           },
           "description": "Root path to label/color mappings. Use the Macaw: Open Rules command to edit them without touching JSON. Rules are checked in order; the first matching rule wins."
         },
+        "macaw.languageColors": {
+          "type": "object",
+          "default": {
+            "typescript": "#3178C6",
+            "javascript": "#F7DF1E",
+            "python": "#3776AB",
+            "rust": "#CE422B",
+            "go": "#00ADD8",
+            "dart": "#0175C2"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "description": "Language ID to color mappings used when Color Mode is Language."
+        },
         "macaw.projectLabel": {
           "type": "string",
           "default": "",

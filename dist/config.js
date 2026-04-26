@@ -42,6 +42,7 @@ function getConfig() {
     return {
         colorMode: colorModes.has(colorMode) ? colorMode : 'path',
         pathRules: config.get('pathRules', []).filter(isPathRule),
+        languageColors: getLanguageColors(config.get('languageColors', {})),
         projectLabel: config.get('projectLabel', '').trim(),
         showLanguageInTitle: config.get('showLanguageInTitle', true),
         showPathLabelInTitle: config.get('showPathLabelInTitle', true)
@@ -56,5 +57,8 @@ function isPathRule(value) {
         && typeof rule.label === 'string'
         && typeof rule.color === 'string'
         && /^#[0-9A-Fa-f]{6}$/.test(rule.color);
+}
+function getLanguageColors(value) {
+    return Object.fromEntries(Object.entries(value).filter(([languageId, color]) => languageId && /^#[0-9A-Fa-f]{6}$/.test(color)));
 }
 //# sourceMappingURL=config.js.map

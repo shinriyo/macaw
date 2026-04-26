@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { applyMacaw } from './apply';
 import { type ColorMode, getConfig, type PathRule } from './config';
+import { defaultLanguageColors, languageNames } from './language';
 import { getFolderName, getPrimaryWorkspaceFolder, pathToTildePattern } from './pathRules';
 
 interface RulesViewState {
@@ -9,6 +10,7 @@ interface RulesViewState {
   showLanguageInTitle: boolean;
   showPathLabelInTitle: boolean;
   pathRules: PathRule[];
+  languageColors: Record<string, string>;
   currentRoot: string;
   currentFolderName: string;
 }
@@ -79,13 +81,28 @@ async function saveState(state: RulesViewState): Promise<void> {
   await config.update('showLanguageInTitle', state.showLanguageInTitle, vscode.ConfigurationTarget.Workspace);
   await config.update('showPathLabelInTitle', state.showPathLabelInTitle, vscode.ConfigurationTarget.Workspace);
   await config.update('pathRules', rules, vscode.ConfigurationTarget.Workspace);
+  await config.update('languageColors', cleanLanguageColors(state.languageColors), vscode.ConfigurationTarget.Workspace);
   await applyMacaw();
   void vscode.window.showInformationMessage('Macaw rules saved.');
+}
+
+function cleanLanguageColors(languageColors: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(languageColors)
+      .filter(([languageId, color]) => languageId && /^#[0-9A-Fa-f]{6}$/.test(color))
+  );
 }
 
 function getHtml(webview: vscode.Webview, state: RulesViewState): string {
   const nonce = getNonce();
   const encodedState = JSON.stringify(state).replace(/</g, '\\u003c');
+  const encodedLanguages = JSON.stringify(
+    Object.entries(languageNames).map(([id, name]) => ({
+      id,
+      name,
+      color: defaultLanguageColors[id]
+    }))
+  ).replace(/</g, '\\u003c');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -131,6 +148,23 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: var(--gap);
       align-items: end;
+    }
+
+    .mode-panel {
+      margin-top: 22px;
+      padding: 14px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      background: var(--vscode-sideBar-background);
+    }
+
+    .mode-panel[hidden] {
+      display: none;
+    }
+
+    .mode-panel.disabled {
+      opacity: 0.48;
+      pointer-events: none;
     }
 
     label {
@@ -192,6 +226,13 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       margin-top: 18px;
     }
 
+    .inline-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
     button {
       min-height: 30px;
       border: 0;
@@ -225,6 +266,11 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
 
     .hint {
       margin-top: 8px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .empty-state {
+      margin: 0;
       color: var(--vscode-descriptionForeground);
     }
 
@@ -267,25 +313,62 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       <label class="toggle"><input id="showLanguageInTitle" type="checkbox"> Show language in title</label>
     </div>
 
-    <h2>Root Path Mappings</h2>
-    <div id="rules" class="rules"></div>
+    <section id="pathPanel" class="mode-panel">
+      <h2>Root Path Mappings</h2>
+      <div class="inline-actions">
+        <button id="addCurrent">Use Current Root Path</button>
+        <button id="addBlank" class="secondary">Add Blank Rule</button>
+      </div>
+      <div id="rules" class="rules"></div>
+      <p class="hint">Pattern is only used in Path mode. First matching path rule wins.</p>
+    </section>
+
+    <section id="languagePanel" class="mode-panel">
+      <h2>Language Color</h2>
+      <div class="rule">
+        <label>
+          Pattern
+          <input type="text" value="Not used in Language mode" disabled>
+        </label>
+        <label>
+          Language
+          <select id="languageSelect"></select>
+        </label>
+        <label>
+          Color
+          <input id="languageColor" type="color">
+        </label>
+        <button id="languagePreview" type="button" class="secondary"></button>
+        <span></span>
+      </div>
+    </section>
+
+    <section id="nonePanel" class="mode-panel disabled">
+      <h2>Disabled</h2>
+      <p class="empty-state">Color and title changes are disabled while Color mode is None.</p>
+    </section>
+
     <div class="actions">
-      <button id="addCurrent">Add Current Root</button>
-      <button id="addBlank" class="secondary">Add Blank Rule</button>
-      <button id="save">Save</button>
-      <button id="apply" class="secondary">Apply</button>
+      <button id="save">Save & Apply</button>
+      <button id="apply" class="secondary">Apply Current Settings</button>
     </div>
-    <p class="hint">First matching path rule wins. Use * for one path segment.</p>
   </main>
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const state = ${encodedState};
+    const languages = ${encodedLanguages};
     const colorMode = document.getElementById('colorMode');
     const projectLabel = document.getElementById('projectLabel');
     const showPathLabelInTitle = document.getElementById('showPathLabelInTitle');
     const showLanguageInTitle = document.getElementById('showLanguageInTitle');
     const rules = document.getElementById('rules');
+    const pathPanel = document.getElementById('pathPanel');
+    const languagePanel = document.getElementById('languagePanel');
+    const nonePanel = document.getElementById('nonePanel');
+    const languageSelect = document.getElementById('languageSelect');
+    const languageColor = document.getElementById('languageColor');
+    const languagePreview = document.getElementById('languagePreview');
 
     function render(nextState) {
       Object.assign(state, nextState);
@@ -293,7 +376,35 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
       projectLabel.value = state.projectLabel;
       showPathLabelInTitle.checked = state.showPathLabelInTitle;
       showLanguageInTitle.checked = state.showLanguageInTitle;
+      renderMode();
+      renderLanguageOptions();
       rules.replaceChildren(...state.pathRules.map((rule, index) => renderRule(rule, index)));
+    }
+
+    function renderMode() {
+      pathPanel.hidden = state.colorMode !== 'path';
+      languagePanel.hidden = state.colorMode !== 'language';
+      nonePanel.hidden = state.colorMode !== 'none';
+      const disabled = state.colorMode === 'none';
+      projectLabel.disabled = disabled;
+      showPathLabelInTitle.disabled = disabled;
+      showLanguageInTitle.disabled = disabled;
+    }
+
+    function renderLanguageOptions() {
+      if (languageSelect.options.length === 0) {
+        for (const language of languages) {
+          const option = document.createElement('option');
+          option.value = language.id;
+          option.textContent = language.name;
+          languageSelect.append(option);
+        }
+      }
+
+      const selected = languageSelect.value || languages[0]?.id || 'typescript';
+      languageSelect.value = selected;
+      languageColor.value = state.languageColors[selected] || defaultLanguageColor(selected);
+      updateLanguagePreview();
     }
 
     function renderRule(rule, index) {
@@ -364,6 +475,7 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
         showLanguageInTitle: showLanguageInTitle.checked,
         showPathLabelInTitle: showPathLabelInTitle.checked,
         pathRules: state.pathRules,
+        languageColors: state.languageColors,
         currentRoot: state.currentRoot,
         currentFolderName: state.currentFolderName
       };
@@ -372,6 +484,40 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     function addRule(rule) {
       state.pathRules.push(rule);
       render(state);
+    }
+
+    function useCurrentRoot() {
+      const nextRule = {
+        pattern: state.currentRoot || '~/develop/*',
+        label: (state.currentFolderName || 'DEV').toUpperCase(),
+        color: '#1976D2'
+      };
+      const index = state.pathRules.findIndex((rule) => rule.pattern === nextRule.pattern);
+
+      if (index === -1) {
+        state.pathRules.unshift(nextRule);
+      } else {
+        state.pathRules[index] = { ...state.pathRules[index], pattern: nextRule.pattern };
+      }
+
+      render(state);
+    }
+
+    function defaultLanguageColor(languageId) {
+      return languages.find((language) => language.id === languageId)?.color || '#1976D2';
+    }
+
+    function updateLanguageColor() {
+      state.languageColors[languageSelect.value] = languageColor.value;
+      updateLanguagePreview();
+    }
+
+    function updateLanguagePreview() {
+      const selected = languageSelect.value;
+      const label = languages.find((language) => language.id === selected)?.name || selected;
+      languagePreview.textContent = label + ' ' + languageColor.value;
+      languagePreview.style.background = languageColor.value;
+      languagePreview.style.color = contrast(languageColor.value);
     }
 
     function contrast(hex) {
@@ -387,16 +533,24 @@ function getHtml(webview: vscode.Webview, state: RulesViewState): string {
     }
 
     document.getElementById('addCurrent').addEventListener('click', () => {
-      addRule({
-        pattern: state.currentRoot || '~/develop/*',
-        label: (state.currentFolderName || 'DEV').toUpperCase(),
-        color: '#1976D2'
-      });
+      useCurrentRoot();
     });
 
     document.getElementById('addBlank').addEventListener('click', () => {
       addRule({ pattern: '~/develop/*', label: 'DEV', color: '#7E57C2' });
     });
+
+    colorMode.addEventListener('change', () => {
+      state.colorMode = colorMode.value;
+      render(state);
+    });
+
+    languageSelect.addEventListener('change', () => {
+      languageColor.value = state.languageColors[languageSelect.value] || defaultLanguageColor(languageSelect.value);
+      updateLanguagePreview();
+    });
+
+    languageColor.addEventListener('input', updateLanguageColor);
 
     document.getElementById('save').addEventListener('click', () => {
       vscode.postMessage({ type: 'save', state: collectState() });

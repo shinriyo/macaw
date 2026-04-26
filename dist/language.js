@@ -33,12 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.languageNames = exports.languageColors = void 0;
+exports.languageNames = exports.defaultLanguageColors = void 0;
 exports.getActiveLanguageId = getActiveLanguageId;
 exports.getLanguageColor = getLanguageColor;
 exports.getLanguageName = getLanguageName;
 const vscode = __importStar(require("vscode"));
-exports.languageColors = {
+exports.defaultLanguageColors = {
     typescript: '#3178C6',
     javascript: '#F7DF1E',
     python: '#3776AB',
@@ -58,7 +58,13 @@ function getActiveLanguageId() {
     return vscode.window.activeTextEditor?.document.languageId;
 }
 function getLanguageColor(languageId = getActiveLanguageId()) {
-    return languageId ? exports.languageColors[languageId] : undefined;
+    if (!languageId) {
+        return undefined;
+    }
+    const configuredColors = vscode.workspace
+        .getConfiguration('macaw')
+        .get('languageColors', {});
+    return configuredColors[languageId] ?? exports.defaultLanguageColors[languageId];
 }
 function getLanguageName(languageId = getActiveLanguageId()) {
     if (!languageId) {

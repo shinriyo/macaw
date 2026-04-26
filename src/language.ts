@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export const languageColors: Record<string, string> = {
+export const defaultLanguageColors: Record<string, string> = {
   typescript: '#3178C6',
   javascript: '#F7DF1E',
   python: '#3776AB',
@@ -23,7 +23,15 @@ export function getActiveLanguageId(): string | undefined {
 }
 
 export function getLanguageColor(languageId = getActiveLanguageId()): string | undefined {
-  return languageId ? languageColors[languageId] : undefined;
+  if (!languageId) {
+    return undefined;
+  }
+
+  const configuredColors = vscode.workspace
+    .getConfiguration('macaw')
+    .get<Record<string, string>>('languageColors', {});
+
+  return configuredColors[languageId] ?? defaultLanguageColors[languageId];
 }
 
 export function getLanguageName(languageId = getActiveLanguageId()): string | undefined {
