@@ -4,6 +4,23 @@
   "description": "Automatically changes workspace color and title based on folder path or active language.",
   "version": "0.0.1",
   "publisher": "shinriyo",
+  "icon": "assets/macaw-logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shinriyo/macaw.git"
+  },
+  "homepage": "https://github.com/shinriyo/macaw#readme",
+  "bugs": {
+    "url": "https://github.com/shinriyo/macaw/issues"
+  },
+  "keywords": [
+    "workspace",
+    "color",
+    "title",
+    "theme",
+    "language",
+    "productivity"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -12,7 +29,8 @@
   ],
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "assets/macaw-logo.png"
   ],
   "activationEvents": [
     "onStartupFinished",

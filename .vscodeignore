@@ -1,4 +1,12 @@
 node_modules
+.npm-cache
+.vscode
+.gitignore
+.vscodeignore
+AGENTS.md
 src
 tsconfig.json
+package-lock.json
+assets/*.svg
+*.vsix
 **/*.map
