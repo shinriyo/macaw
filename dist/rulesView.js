@@ -217,7 +217,7 @@ function getHtml(webview, state) {
 
     .rule {
       display: grid;
-      grid-template-columns: minmax(220px, 1.8fr) minmax(120px, 0.8fr) 56px 98px 34px;
+      grid-template-columns: minmax(220px, 1.8fr) 82px minmax(120px, 0.8fr) 56px 98px 34px;
       gap: 8px;
       align-items: end;
       padding: 10px;
@@ -262,6 +262,11 @@ function getHtml(webview, state) {
 
     button.secondary:hover {
       background: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    button.compact {
+      padding-inline: 8px;
+      white-space: nowrap;
     }
 
     button.icon {
@@ -343,7 +348,6 @@ function getHtml(webview, state) {
     <section id="pathPanel" class="mode-panel">
       <h2>Root Path Mappings</h2>
       <div class="inline-actions">
-        <button id="addCurrent">Use Current Root Path</button>
         <button id="addBlank" class="secondary">Add Blank Rule</button>
       </div>
       <div id="rules" class="rules"></div>
@@ -440,6 +444,7 @@ function getHtml(webview, state) {
 
       row.append(
         field('Pattern', textInput(rule.pattern, (value) => state.pathRules[index].pattern = value)),
+        useCurrentRootButton(index),
         field('Label', textInput(rule.label, (value) => state.pathRules[index].label = value)),
         field('Color', colorInput(rule.color, (value) => state.pathRules[index].color = value)),
         preview(rule),
@@ -495,6 +500,19 @@ function getHtml(webview, state) {
       return button;
     }
 
+    function useCurrentRootButton(index) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'secondary compact';
+      button.title = 'Apply current workspace root to this pattern';
+      button.textContent = 'Use Root';
+      button.addEventListener('click', () => {
+        state.pathRules[index].pattern = state.currentRoot || '~/develop/*';
+        render(state);
+      });
+      return button;
+    }
+
     function collectState() {
       return {
         colorMode: colorMode.value,
@@ -510,23 +528,6 @@ function getHtml(webview, state) {
 
     function addRule(rule) {
       state.pathRules.push(rule);
-      render(state);
-    }
-
-    function useCurrentRoot() {
-      const nextRule = {
-        pattern: state.currentRoot || '~/develop/*',
-        label: (state.currentFolderName || 'DEV').toUpperCase(),
-        color: '#1976D2'
-      };
-      const index = state.pathRules.findIndex((rule) => rule.pattern === nextRule.pattern);
-
-      if (index === -1) {
-        state.pathRules.unshift(nextRule);
-      } else {
-        state.pathRules[index] = { ...state.pathRules[index], pattern: nextRule.pattern };
-      }
-
       render(state);
     }
 
@@ -558,10 +559,6 @@ function getHtml(webview, state) {
       const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
       return luminance > 0.6 ? '#000000' : '#FFFFFF';
     }
-
-    document.getElementById('addCurrent').addEventListener('click', () => {
-      useCurrentRoot();
-    });
 
     document.getElementById('addBlank').addEventListener('click', () => {
       addRule({ pattern: '~/develop/*', label: 'DEV', color: '#7E57C2' });
