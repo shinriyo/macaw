@@ -481,13 +481,18 @@ function getHtml(webview, state) {
     function renderRule(rule, index) {
       const row = document.createElement('div');
       row.className = 'rule';
+      const chip = colorChip(rule.color);
+      const color = colorInput(rule.color, (value) => {
+        state.pathRules[index].color = value;
+        updateColorChip(chip, value);
+      });
 
       row.append(
         field('Pattern', textInput(rule.pattern, (value) => state.pathRules[index].pattern = value)),
         useCurrentRootButton(index),
         field('Label', textInput(rule.label, (value) => state.pathRules[index].label = value)),
-        field('Color', colorInput(rule.color, (value) => state.pathRules[index].color = value)),
-        preview(rule),
+        field('Color', color),
+        chip,
         removeButton(index)
       );
 
@@ -521,10 +526,6 @@ function getHtml(webview, state) {
       input.value = /^#[0-9A-Fa-f]{6}$/.test(value) ? value : '#1976D2';
       input.addEventListener('input', () => onInput(input.value));
       return input;
-    }
-
-    function preview(rule) {
-      return colorChip(rule.color);
     }
 
     function removeButton(index) {
@@ -592,12 +593,17 @@ function getHtml(webview, state) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'color-chip';
+      updateColorChip(button, color);
+      button.addEventListener('click', () => copyColor(button, button.dataset.color || color));
+      return button;
+    }
+
+    function updateColorChip(button, color) {
       button.textContent = color;
       button.title = 'Copy ' + color;
+      button.dataset.color = color;
       button.style.background = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : '';
       button.style.color = contrast(color);
-      button.addEventListener('click', () => copyColor(button, color));
-      return button;
     }
 
     function copyColor(button, color) {

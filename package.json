@@ -2,7 +2,7 @@
   "name": "macaw",
   "displayName": "Macaw",
   "description": "Automatically changes workspace color and title based on folder path or active language.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "shinriyo",
   "icon": "assets/macaw-logo.png",
   "repository": {
