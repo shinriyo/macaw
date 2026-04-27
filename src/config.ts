@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 export type ColorMode = 'path' | 'language' | 'none';
+export type ConfigurationTarget = 'user' | 'workspace';
 
 export interface PathRule {
   pattern: string;
@@ -10,6 +11,7 @@ export interface PathRule {
 
 export interface MacawConfig {
   colorMode: ColorMode;
+  configurationTarget: ConfigurationTarget;
   pathRules: PathRule[];
   languageColors: Record<string, string>;
   showLanguageInTitle: boolean;
@@ -17,13 +19,16 @@ export interface MacawConfig {
 }
 
 const colorModes = new Set<ColorMode>(['path', 'language', 'none']);
+const configurationTargets = new Set<ConfigurationTarget>(['user', 'workspace']);
 
 export function getConfig(): MacawConfig {
   const config = vscode.workspace.getConfiguration('macaw');
   const colorMode = config.get<ColorMode>('colorMode', 'path');
+  const configurationTarget = config.get<ConfigurationTarget>('configurationTarget', 'workspace');
 
   return {
     colorMode: colorModes.has(colorMode) ? colorMode : 'path',
+    configurationTarget: configurationTargets.has(configurationTarget) ? configurationTarget : 'workspace',
     pathRules: config.get<PathRule[]>('pathRules', []).filter(isPathRule),
     languageColors: getLanguageColors(config.get<Record<string, string>>('languageColors', {})),
     showLanguageInTitle: config.get<boolean>('showLanguageInTitle', true),

@@ -19,7 +19,7 @@ Macaw is a Visual Studio Code extension for teams and developers who move betwee
 
 Install from the Visual Studio Code Marketplace after release, or install the packaged VSIX manually:
 
-1. Download `macaw-0.0.5.vsix`.
+1. Download `macaw-0.0.6.vsix`.
 2. Open the Extensions view in VS Code.
 3. Choose `Install from VSIX...`.
 4. Select the downloaded file.
@@ -39,6 +39,7 @@ Install from the Visual Studio Code Marketplace after release, or install the pa
 ## Settings
 
 - `macaw.colorMode`: `path`, `language`, or `none`
+- `macaw.configurationTarget`: `user` or `workspace`
 - `macaw.pathRules`: root path mappings
 - `macaw.languageColors`: language ID color mappings
 - `macaw.showLanguageInTitle`

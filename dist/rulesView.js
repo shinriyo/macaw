@@ -83,6 +83,9 @@ function getRulesViewState() {
 }
 async function saveState(state) {
     const config = vscode.workspace.getConfiguration('macaw');
+    const target = state.configurationTarget === 'user'
+        ? vscode.ConfigurationTarget.Global
+        : vscode.ConfigurationTarget.Workspace;
     const rules = state.pathRules
         .map((rule) => ({
         pattern: rule.pattern.trim(),
@@ -90,13 +93,25 @@ async function saveState(state) {
         color: rule.color.trim()
     }))
         .filter((rule) => rule.pattern && rule.label && /^#[0-9A-Fa-f]{6}$/.test(rule.color));
-    await config.update('colorMode', state.colorMode, vscode.ConfigurationTarget.Workspace);
-    await config.update('showLanguageInTitle', state.showLanguageInTitle, vscode.ConfigurationTarget.Workspace);
-    await config.update('showPathLabelInTitle', state.showPathLabelInTitle, vscode.ConfigurationTarget.Workspace);
-    await config.update('pathRules', rules, vscode.ConfigurationTarget.Workspace);
-    await config.update('languageColors', cleanLanguageColors(state.languageColors), vscode.ConfigurationTarget.Workspace);
+    await config.update('configurationTarget', state.configurationTarget, target);
+    await config.update('colorMode', state.colorMode, target);
+    await config.update('showLanguageInTitle', state.showLanguageInTitle, target);
+    await config.update('showPathLabelInTitle', state.showPathLabelInTitle, target);
+    await config.update('pathRules', rules, target);
+    await config.update('languageColors', cleanLanguageColors(state.languageColors), target);
+    if (target === vscode.ConfigurationTarget.Global) {
+        await clearWorkspaceMacawSettings(config);
+    }
     await (0, apply_1.applyMacaw)();
-    void vscode.window.showInformationMessage('Macaw rules saved.');
+    void vscode.window.showInformationMessage(`Macaw rules saved to ${state.configurationTarget} settings.`);
+}
+async function clearWorkspaceMacawSettings(config) {
+    await config.update('configurationTarget', undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update('colorMode', undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update('showLanguageInTitle', undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update('showPathLabelInTitle', undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update('pathRules', undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update('languageColors', undefined, vscode.ConfigurationTarget.Workspace);
 }
 async function copyColor(color) {
     if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
@@ -380,6 +395,13 @@ function getHtml(webview, state) {
           <option value="none">None</option>
         </select>
       </label>
+      <label>
+        Save target
+        <select id="configurationTarget">
+          <option value="user">User</option>
+          <option value="workspace">Workspace</option>
+        </select>
+      </label>
     </section>
 
     <div class="toggles">
@@ -433,6 +455,7 @@ function getHtml(webview, state) {
     const state = ${encodedState};
     const languages = ${encodedLanguages};
     const colorMode = document.getElementById('colorMode');
+    const configurationTarget = document.getElementById('configurationTarget');
     const showPathLabelInTitle = document.getElementById('showPathLabelInTitle');
     const showLanguageInTitle = document.getElementById('showLanguageInTitle');
     const rules = document.getElementById('rules');
@@ -446,6 +469,7 @@ function getHtml(webview, state) {
     function render(nextState) {
       Object.assign(state, nextState);
       colorMode.value = state.colorMode;
+      configurationTarget.value = state.configurationTarget;
       showPathLabelInTitle.checked = state.showPathLabelInTitle;
       showLanguageInTitle.checked = state.showLanguageInTitle;
       renderMode();
@@ -557,6 +581,7 @@ function getHtml(webview, state) {
     function collectState() {
       return {
         colorMode: colorMode.value,
+        configurationTarget: configurationTarget.value,
         showLanguageInTitle: showLanguageInTitle.checked,
         showPathLabelInTitle: showPathLabelInTitle.checked,
         pathRules: state.pathRules,
@@ -638,6 +663,10 @@ function getHtml(webview, state) {
     colorMode.addEventListener('change', () => {
       state.colorMode = colorMode.value;
       render(state);
+    });
+
+    configurationTarget.addEventListener('change', () => {
+      state.configurationTarget = configurationTarget.value;
     });
 
     languageSelect.addEventListener('change', () => {

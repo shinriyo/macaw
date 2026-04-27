@@ -36,11 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getConfig = getConfig;
 const vscode = __importStar(require("vscode"));
 const colorModes = new Set(['path', 'language', 'none']);
+const configurationTargets = new Set(['user', 'workspace']);
 function getConfig() {
     const config = vscode.workspace.getConfiguration('macaw');
     const colorMode = config.get('colorMode', 'path');
+    const configurationTarget = config.get('configurationTarget', 'workspace');
     return {
         colorMode: colorModes.has(colorMode) ? colorMode : 'path',
+        configurationTarget: configurationTargets.has(configurationTarget) ? configurationTarget : 'workspace',
         pathRules: config.get('pathRules', []).filter(isPathRule),
         languageColors: getLanguageColors(config.get('languageColors', {})),
         showLanguageInTitle: config.get('showLanguageInTitle', true),

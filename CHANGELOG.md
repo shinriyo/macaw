@@ -2,6 +2,11 @@
 
 All notable changes to Macaw are listed here.
 
+## 0.0.6
+
+- Adds a GUI save target selector for User or Workspace settings.
+- User settings can store Macaw rules without creating or modifying a repository `.vscode/settings.json`.
+
 ## 0.0.5
 
 - Adds this changelog so users can review all release history from the Marketplace and repository.
