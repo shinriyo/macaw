@@ -2,7 +2,7 @@
   "name": "macaw",
   "displayName": "Macaw",
   "description": "Automatically changes workspace color and title based on folder path or active language.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "shinriyo",
   "icon": "assets/macaw-logo.png",
   "repository": {
@@ -34,16 +34,11 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:macaw.apply",
     "onCommand:macaw.openRules"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "macaw.apply",
-        "title": "Macaw: Apply"
-      },
       {
         "command": "macaw.openRules",
         "title": "Macaw: Open Rules"

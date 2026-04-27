@@ -39,9 +39,7 @@ const vscode = __importStar(require("vscode"));
 const apply_1 = require("./apply");
 const rulesView_1 = require("./rulesView");
 function activate(context) {
-    context.subscriptions.push(vscode.commands.registerCommand('macaw.apply', async () => {
-        await (0, apply_1.applyMacaw)();
-    }), vscode.commands.registerCommand('macaw.openRules', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('macaw.openRules', async () => {
         await (0, rulesView_1.openRulesView)(context);
     }), vscode.workspace.onDidChangeWorkspaceFolders(() => void (0, apply_1.applyMacaw)()), vscode.window.onDidChangeActiveTextEditor(() => void (0, apply_1.applyMacaw)()), vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('macaw')) {

@@ -19,7 +19,7 @@ Macaw is a Visual Studio Code extension for teams and developers who move betwee
 
 Install from the Visual Studio Code Marketplace after release, or install the packaged VSIX manually:
 
-1. Download `macaw-0.0.1.vsix`.
+1. Download `macaw-0.0.2.vsix`.
 2. Open the Extensions view in VS Code.
 3. Choose `Install from VSIX...`.
 4. Select the downloaded file.
@@ -35,7 +35,6 @@ Install from the Visual Studio Code Marketplace after release, or install the pa
 ## Commands
 
 - `Macaw: Open Rules`
-- `Macaw: Apply`
 
 ## Settings
 
@@ -46,6 +45,10 @@ Install from the Visual Studio Code Marketplace after release, or install the pa
 - `macaw.showPathLabelInTitle`
 
 ## Release Notes
+
+### 0.0.2
+
+Removes the standalone Apply command from the Command Palette. Apply and Clear actions now live in the GUI rules editor.
 
 ### 0.0.1
 
